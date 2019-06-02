@@ -33,7 +33,7 @@ class Reader:
             else:
                 if 'sku' in value.lower():
                     sku_columns.append(column.column - 1)
-                if 'hand' in value.lower():
+                if 'quantity on hand' == value.lower():
                     quantity_on_hand_column_number = column.column - 1
         if quantity_on_hand_column_number is None:
             raise Exception(f"Unable to find SKU Column in {self.replenishment_filename} ")
@@ -43,7 +43,7 @@ class Reader:
     def find_column_number(sheet, filename, column_name):
         for head in sheet.iter_rows(1, 1):
             for column in head:
-                if column_name in column.value.lower():
+                if column_name == column.value.lower():
                     return column.column
         else:
             raise Exception(f"Unable to find {column_name} in {filename}")
