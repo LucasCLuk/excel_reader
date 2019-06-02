@@ -11,12 +11,14 @@ green_background = PatternFill("solid", start_color=colors.GREEN, end_color=colo
 class Reader:
 
     def __init__(self, inventory_filename: str, replenishment_filename: str):
+        self.replenishment_filename = replenishment_filename
         self.inventory_book = load_workbook(inventory_filename, read_only=True)
         self.replenishment_book = load_workbook(replenishment_filename)
         self.inventory_sheet = self.inventory_book.active
         self.replenishment_sheet = self.replenishment_book.active
         self.quantity_on_hand_column_number, self.inventory_sku_columns = self.find_inventory_columns()
-        self.replenishment_sku_column_number = self.find_column_number(self.replenishment_sheet, 'sku')
+        self.replenishment_sku_column_number = self.find_column_number(self.replenishment_sheet,
+                                                                       self.replenishment_filename, 'sku')
 
     def find_inventory_columns(self):
         sku_columns = []
@@ -31,17 +33,18 @@ class Reader:
                     sku_columns.append(column.column - 1)
                 if 'hand' in value.lower():
                     quantity_on_hand_column_number = column.column - 1
+        if quantity_on_hand_column_number is None:
+            raise Exception(f"Unable to find SKU Column in {self.replenishment_filename} ")
         return quantity_on_hand_column_number, set(sku_columns)
 
     @staticmethod
-    def find_column_number(sheet, column_name):
+    def find_column_number(sheet, filename, column_name):
         for head in sheet.iter_rows(1, 1):
             for column in head:
                 if column_name in column.value.lower():
                     return column.column
-
-    def find_sku_quantity(self, sku):
-        pass
+        else:
+            raise Exception(f"Unable to find {column_name} in {filename}")
 
     def run(self):
         print("building Inventory...")
@@ -62,7 +65,8 @@ class Reader:
             row = self.replenishment_sheet[f"{row_index}:{row_index}"]
             for column in row:
                 column.fill = green_background if quantity > 0 else red_background
-        self.replenishment_book.save('updated_replenishment.xlsx')
+        today = datetime.now().strftime('%a-%b-%d')
+        self.replenishment_book.save(f'updated_replenishment - {today}.xlsx')
 
 
 if __name__ == '__main__':
