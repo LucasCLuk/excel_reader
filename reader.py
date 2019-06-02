@@ -1,8 +1,10 @@
+import os
 from datetime import datetime
 
 from openpyxl import load_workbook
 from openpyxl.cell.read_only import EmptyCell
 from openpyxl.styles import PatternFill, colors
+from progressbar import progressbar
 
 red_background = PatternFill("solid", start_color=colors.RED, end_color=colors.RED)
 green_background = PatternFill("solid", start_color=colors.GREEN, end_color=colors.GREEN)
@@ -59,20 +61,25 @@ class Reader:
                               columns if column.value in data})
 
         print("filling in colors...")
-        for sku, item_data in inventory.items():
+
+        for sku, item_data in progressbar(inventory.items()):
             row_index = data[sku]
             quantity = int(item_data['quantity'])
             row = self.replenishment_sheet[f"{row_index}:{row_index}"]
             for column in row:
                 column.fill = green_background if quantity > 0 else red_background
+
         today = datetime.now().strftime('%a-%b-%d')
         self.replenishment_book.save(f'updated_replenishment - {today}.xlsx')
 
 
 if __name__ == '__main__':
-    reader = Reader('inventory.xlsx', 'replenishment.xlsx')
-    start = datetime.utcnow()
-    # print(reader.find_sku('IX-BHSV-2ZPK'))
-    reader.run()
-    end = datetime.utcnow()
-    print(f"Took: {(end - start).total_seconds():,} seconds")
+    try:
+        inventory_files = os.listdir('inventory')
+        replenishment_files = os.listdir('replenishment')
+        reader = Reader(os.path.join('inventory', inventory_files[0]),
+                        os.path.join('replenishment', replenishment_files[0]))
+        reader.run()
+    except Exception as e:
+        print(f'Error has occurred: {e}')
+        input('Press Enter to exit')
