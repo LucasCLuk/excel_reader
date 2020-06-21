@@ -19,8 +19,7 @@ class Reader:
         self.inventory_sheet = self.inventory_book.active
         self.replenishment_sheet = self.replenishment_book.active
         self.quantity_on_hand_column_number, self.inventory_sku_columns = self.find_inventory_columns()
-        self.replenishment_sku_column_number = self.find_column_number(self.replenishment_sheet,
-                                                                       self.replenishment_filename, 'sku')
+        self.replenishment_sku_column_number = self.find_column_number(self.replenishment_sheet, 'sku')
 
     def find_inventory_columns(self):
         sku_columns = []
@@ -39,14 +38,13 @@ class Reader:
             raise Exception(f"Unable to find SKU Column in {self.replenishment_filename} ")
         return quantity_on_hand_column_number, set(sku_columns)
 
-    @staticmethod
-    def find_column_number(sheet, filename, column_name):
+    def find_column_number(self,sheet, column_name):
         for head in sheet.iter_rows(1, 1):
             for column in head:
-                if column_name == column.value.lower():
+                if column_name in column.value.lower() and column.value.lower() != "fnsku":
                     return column.column
         else:
-            raise Exception(f"Unable to find {column_name} in {filename}")
+            raise Exception(f"Unable to find {column_name} in {self.replenishment_filename}")
 
     def run(self):
         print("building Inventory...")
