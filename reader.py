@@ -32,7 +32,7 @@ class Reader:
             else:
                 if 'sku' in value.lower():
                     sku_columns.append(column.column - 1)
-                if 'quantity on hand' == value.lower():
+                if 'quantity available' == value.lower():
                     quantity_on_hand_column_number = column.column - 1
         if quantity_on_hand_column_number is None:
             raise Exception(f"Unable to find SKU Column in {self.replenishment_filename} ")
